@@ -26,5 +26,22 @@ class CART:
         self.X = X
         self.Y = Y
         
-    def train(self, loss_func = 'entropy'):
+    def best_split(self, X, y):
+        '''
+        Go through every feature to determin its best partition value
+        Decide which is the purest partition
+        Return the feature and the threshold split
+        '''
+        n_features  = X.shape[1]
+        m           = y.shape[0]
+        
+        for feat in range(n_features):
+            for obs in range(m):
+                k = 
+                
+            
+        
+        
+        
+    def fit(self, loss_func = 'entropy'):
         
