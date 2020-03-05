@@ -35,30 +35,41 @@ class CART:
         '''
         n_features      = X.shape[1]
         m               = Y.shape[0]
-        largest_score   = 0
+        largest_score   = 1000
+        classes         = np.unique(Y)
         
         for feat in range(n_features):
-            x = X[feat,:]
+            print('feature #' + str(feat) )
+            x = X[:, feat]
             a, b = zip(*sorted(zip(x, Y)))
-            for obs in range(m):
+            for obs in range(m-2):
                 n_left  = obs + 1
-                n_right = m + 1 - obs
+                n_right = m - obs
                 
-                score_left = 
-                score_right = 
-                score = (n_left*score_left + n_right*score_right)/(n_left+n_rigth)
                 
+                if a[n_left] == a[n_left +1]:
+                    continue
+                
+                score_left = Gini(a[:n_left], classes)
+                score_right = Gini(b[n_left:], classes)
+                score = (n_left*score_left + n_right*score_right)/(n_left+n_right)\
                 
                 # check whether the 
-                if score > largest_score:
+                if score < largest_score:
                     largest_score   = score
-                    threshold       = x
+                    threshold       = (a[n_left]+a[n_left+1])/2
                     feature_idx     = feat
-                
         
         return feature_idx, threshold
                 
             
+def Gini(y,classes):
+    gini = 0
+    N    = len(y)
+    for clas in classes:
+        p = sum(y==clas)/N
+        gini+=p*(1-p)
+    return gini
         
         
         
