@@ -6,6 +6,7 @@ Created on Tue Mar  3 10:06:50 2020
 """
 import os
 import csv
+import numpy as np
 from numpy import genfromtxt
 
 directory = r'C:\Users\Spare 3\Desktop\kaggle\CART'
@@ -17,31 +18,27 @@ f               = open('spambase.names')
 labels          = f.readlines()[33:]
 labels          = [i.split(':')[0] for i in labels]
 my_data_raw     = genfromtxt('spambase.data', delimiter=',')
-subset          = np.random.randint(my_data_raw.shape[0], size = 100)
+subset          = np.random.default_rng().choice(my_data_raw.shape[0], size = 3000, replace = False)
 my_data         = my_data_raw[subset,:]
-Y               = my_data[:,my_data.shape[1]-1].reshape((my_data.shape[0],1))
+Y               = my_data[:,my_data.shape[1]-1]#.reshape((my_data.shape[0],1))
 X               = my_data[:,0:my_data.shape[1]-1]
 
-class Node:
-    
-    def __init__(self):
-        self.left       =
-        self.right      =
-        self.threshold  =
-        
-    
-    
-    
+
 class DecisionTree:
     
-    def __init__(self, feature = 0,  treshold = None, right = None, left= None):
-        self.feature = feature
-        self.treshold = treshold
-        self.right = right
-        self.left = left
+    def __init__(self, feature = 0,  treshold = None, right = None, left= None, x = None, y = None, classed = None, score = None):
+        self.feature        = feature
+        self.treshold       = treshold
+        self.right          = right
+        self.left           = left
+        self.x              = x 
+        self.y              = y
+        self.m              = len(y)
+        self.classed        = classed
+        self.score          = score
     
     
-def best_split(self, X, Y):
+def BuildTree(X, Y):
     '''
     Go through every feature to determine its best partition value
     Decide which is the purest partition
@@ -49,47 +46,100 @@ def best_split(self, X, Y):
     '''
     n_features      = X.shape[1]
     m               = Y.shape[0]
-    largest_score   = 1
+    smallest_score  = 100
     classes         = np.unique(Y)
+    feature_idx     = 0
     
     for feat in range(n_features):
         print('feature #' + str(feat) )
         x = X[:, feat]
+        current_score = Gini(tuple(Y), classes, m)
         a, b = zip(*sorted(zip(x, Y)))
-        for obs in range(m-2):
-            n_left  = obs + 1
+        for obs in range(1, m):
+            n_left  = obs
             n_right = m - obs
             
             
-            if a[n_left] == a[n_left +1]:
+            if a[n_left-1] == a[n_left]:
                 continue
-            
-            score_left = Gini(a[:n_left], classes, n_left)
-            score_right = Gini(b[n_left:], classes, n_right)
-            score = (n_left*score_left + n_right*score_right)/(n_left+n_right)
+            # get right and left datasets
+            left_y, right_y = b[:n_left], b[n_left:]
+            score_left = Gini(left_y, classes, n_left)
+            score_right = Gini(right_y, classes, n_right)
+            score = (n_left*score_left + n_right*score_right)/m
             
             # check whether the 
-            if score < largest_score:
-                largest_score   = score
-                threshold       = (a[n_left]+a[n_left+1])/2
+            if score <smallest_score:
+                
+                smallest_score   = score
+                treshold        = (a[n_left-1]+a[n_left])/2
                 feature_idx     = feat
         print('chosen feature is #'+str(feature_idx))
-        print('score is: '+str(largest_score)) 
+        print('with score: '+str(smallest_score))
+        
+    if current_score<=smallest_score:
+        #select the majority class in leave as the classified value
+        values, count = np.unique(Y, return_counts=True)
+        ind = np.argmax(count)
+        return DecisionTree(x=X, y = Y, classed = values[ind], score = current_score)
+    else:
+        print('Iteration Done')
+        filt = X[:,feature_idx]<treshold
+        left_keep_x, left_keep_y = X[filt,:], Y[filt]
+        right_keep_x, right_keep_y = X[filt==False,:], Y[filt==False]
+        
+        left_branch = BuildTree(left_keep_x, left_keep_y)
+        right_branch = BuildTree(right_keep_x, right_keep_y)
+        return DecisionTree(feature = feature_idx, treshold = treshold, right = right_branch, left= left_branch, x = X, y = Y, score = smallest_score)
     
-    return feature_idx, threshold
                 
             
 def Gini(y,classes, N):
     gini = 0
     for clas1 in classes:
-        p1 = sum(y==clas1)/N
+        p1 = y.count(clas1)/N
         for clas2 in classes:
-            p2 = sum(y==clas2)/N 
-            gini+=p1*p2
+            if clas1!=clas2:
+                p2 = y.count(clas2)/N 
+                gini+=p1*p2
     return gini
 
 
+def Predict(tree, x):
+    '''Predict class of the example x'''
+    
+    
+    if tree.classed != None:
+        return tree.classed
+    else:
+        col = x[tree.feature]
+        if col < tree.treshold:
+            branch = tree.left
+        else:
+            branch = tree.right
+    return Predict(branch,x)
+
         
+        
+     
+
+tree = BuildTree(X, Y) 
+i=1
+Predict(tree, X[i,:])
+subset
+y=[]
+y_hat = []
+correct=[]
+for i in range(len(Y)):
+    if i not in subset:
+        real = my_data_raw[i, -1]
+        estimate = Predict(tree, my_data_raw[i,:-1])
+        y.append(real)
+        y_hat.append(estimate)
+        correct.append(real==estimate)
+sum(correct)/len(correct)
+    
+    
         
         
         
